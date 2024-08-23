@@ -13,6 +13,7 @@ pub mod components;
 pub mod conversions;
 pub mod gameplay_systems;
 pub mod load;
+pub mod prelude;
 
 pub use qevy_derive;
 
