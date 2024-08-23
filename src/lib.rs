@@ -14,6 +14,8 @@ pub mod conversions;
 pub mod gameplay_systems;
 pub mod load;
 
+pub use qevy_derive;
+
 #[derive(Debug, Asset, TypePath)]
 pub struct MapAsset {
     geomap: Option<shambler::GeoMap>,
