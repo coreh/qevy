@@ -17,7 +17,7 @@ qevy-types = { path = "qevy-types" }
 
 anyhow = "1.0.81"
 async-lock = "3.3.0"
-bevy = "0.14.0"
+bevy = "0.15.0-dev"
 regex = "1.10.4"
 ron = "0.8.1"
 thiserror = "1.0.58"
@@ -41,3 +41,6 @@ path = "examples/exporting_config.rs"
 default = ["rapier"]
 avian = ["avian3d"]
 rapier = ["bevy_rapier3d"]
+
+[patch.crates-io]
+bevy = { path = "../bevy" }

@@ -19,7 +19,7 @@ pub(crate) fn extensions() -> &'static [&'static str] {
 }
 
 pub(crate) async fn load<'a>(
-    reader: &'a mut Reader<'_>,
+    reader: &'a mut dyn Reader,
     load_context: &'a mut LoadContext<'_>,
     headless: bool,
 ) -> Result<MapAsset, MapAssetLoaderError> {
