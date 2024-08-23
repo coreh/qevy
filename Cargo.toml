@@ -1,3 +1,4 @@
+workspace = { members = ["qevy-derive", "qevy-types"] }
 [package]
 name = "qevy"
 version = "0.2.0"
@@ -11,6 +12,9 @@ authors = ["Brian Howard <brian.howard@hey.com>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+qevy-derive = { path = "qevy-derive" }
+qevy-types = { path = "qevy-types" }
+
 anyhow = "1.0.81"
 async-lock = "3.3.0"
 bevy = "0.14.0"
@@ -28,6 +32,10 @@ serde = { version = "1.0.197", features = ["derive"] }
 
 [[example]]
 name = "first_person"
+
+[[example]]
+name = "exporting_config"
+path = "examples/exporting_config.rs"
 
 [features]
 default = ["rapier"]
