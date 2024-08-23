@@ -174,7 +174,7 @@ pub(crate) fn qevy_entity_derive_macro2(
                             let field_type_id = named_field.type_id();
                             let field_registry = registry.get(field_type_id).expect(format!("Field type not found: {}", name).as_str());
 
-                            let ReflectMut::Struct(mut_value) = default_value.reflect_mut() else {
+                            let bevy::reflect::ReflectMut::Struct(mut_value) = default_value.reflect_mut() else {
                                 unreachable!("Default value is not a struct");
                             };
                             let property = field_registry.data::<ReflectQevyProperty>().expect(format!("Field type does not implement ReflectQevyProperty: {}", name).as_str());
