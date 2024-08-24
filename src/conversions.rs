@@ -17,6 +17,7 @@ pub fn to_bevy_position(vector: &Vec3, map_units: &MapUnits) -> Vec3 {
     match map_units {
         MapUnits::Bevy => Vec3::new(vector.y, vector.z, vector.x) * SHAMBLER_UNITS_TO_BEVY_METERS,
         MapUnits::Trenchbroom => Vec3::new(vector.y, vector.z, vector.x),
+        MapUnits::Custom(ratio) => Vec3::new(vector.y, vector.z, vector.x) * (1.0 / ratio),
     }
 }
 
@@ -36,6 +37,9 @@ pub fn to_bevy_vertices(vertices: &Vec<Vector3>, map_units: &MapUnits) -> Vec<Ve
             MapUnits::Bevy => bevy_vertices
                 .push(Vec3::new(vertex.y, vertex.z, vertex.x) * SHAMBLER_UNITS_TO_BEVY_METERS),
             MapUnits::Trenchbroom => bevy_vertices.push(Vec3::new(vertex.y, vertex.z, vertex.x)),
+            MapUnits::Custom(ratio) => {
+                bevy_vertices.push(Vec3::new(vertex.y, vertex.z, vertex.x) * (1.0 / ratio))
+            }
         }
     }
     bevy_vertices

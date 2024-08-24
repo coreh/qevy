@@ -173,6 +173,7 @@ pub struct Door {
 pub enum MapUnits {
     Bevy,
     Trenchbroom,
+    Custom(f32),
 }
 
 impl Default for MapUnits {
