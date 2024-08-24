@@ -78,7 +78,7 @@ pub fn avian_trigger_system(
                     collider,
                     gtransform.translation(),
                     transform.rotation,
-                    SpatialQueryFilter {
+                    &SpatialQueryFilter {
                         excluded_entities: excluded,
                         ..default()
                     },
@@ -100,7 +100,7 @@ pub fn avian_trigger_system(
                     collider,
                     gtransform.translation(),
                     transform.rotation,
-                    SpatialQueryFilter::default(),
+                    &SpatialQueryFilter::default(),
                 );
 
                 for entity in intersections.iter() {
