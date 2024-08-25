@@ -19,6 +19,7 @@ pub struct SpawnMeshEvent {
     pub mesh: Mesh,
     pub collider: Option<Entity>,
     pub material: Handle<StandardMaterial>,
+    pub texture_size: (u32, u32),
 }
 
 pub fn build_map(
@@ -246,6 +247,11 @@ pub fn build_map(
                                             .get(texture_name)
                                             .unwrap()
                                             .clone(),
+                                        texture_size: map_asset
+                                            .texture_sizes
+                                            .get(texture_name)
+                                            .unwrap()
+                                            .clone(),
                                     });
                                 }
                             }
@@ -295,6 +301,11 @@ pub fn build_map(
                                         collider: Some(collider.id()),
                                         material: map_asset
                                             .material_handles
+                                            .get(texture_name)
+                                            .unwrap()
+                                            .clone(),
+                                        texture_size: map_asset
+                                            .texture_sizes
                                             .get(texture_name)
                                             .unwrap()
                                             .clone(),
