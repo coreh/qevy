@@ -98,7 +98,9 @@ impl MapEntityProperties {
 pub struct BrushEntity;
 
 #[derive(Default, Component)]
-pub struct Brush;
+pub struct Brush {
+    pub texture_size: (u32, u32),
+}
 
 #[derive(Component)]
 pub struct TriggeredOnce;
