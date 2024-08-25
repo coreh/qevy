@@ -15,10 +15,10 @@ use crate::{MapAsset, PostBuildMapEvent};
 
 #[derive(Event)]
 pub struct SpawnMeshEvent {
-    map: Entity,
-    mesh: Mesh,
-    collider: Option<Entity>,
-    material: Handle<StandardMaterial>,
+    pub map: Entity,
+    pub mesh: Mesh,
+    pub collider: Option<Entity>,
+    pub material: Handle<StandardMaterial>,
 }
 
 pub fn build_map(
