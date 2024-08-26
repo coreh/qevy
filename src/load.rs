@@ -1,17 +1,18 @@
 use crate::build::SpawnMeshEvent;
 use crate::{components::*, MapAssetLoaderError};
 use crate::{MapAsset, PostBuildMapEvent};
+use async_lock::futures::Read;
 use bevy::asset::io::Reader;
-use bevy::asset::AsyncReadExt;
 use bevy::asset::LoadContext;
 use bevy::asset::LoadedAsset;
+use bevy::asset::{AsyncReadExt, ReadAssetBytesError};
 use bevy::prelude::*;
 use bevy::render::render_asset::RenderAssetUsages;
-use bevy::render::texture::CompressedImageFormats;
 use bevy::render::texture::ImageAddressMode;
 use bevy::render::texture::ImageSampler;
 use bevy::render::texture::ImageSamplerDescriptor;
 use bevy::render::texture::ImageType;
+use bevy::render::texture::{CompressedImageFormats, ImageFilterMode};
 use std::collections::BTreeMap;
 
 pub(crate) fn extensions() -> &'static [&'static str] {
@@ -37,7 +38,7 @@ pub(crate) async fn load<'a>(
         };
 
         if !headless {
-            load_map_textures(&mut map, load_context).await;
+            load_map_textures(&mut map, load_context).await?;
         }
         return Ok(map);
     }
@@ -80,53 +81,175 @@ pub(crate) fn handle_loaded_map_system(
 pub(crate) async fn load_map_textures<'a>(
     map_asset: &mut MapAsset,
     load_context: &mut LoadContext<'a>,
-) {
+) -> Result<(), MapAssetLoaderError> {
     let geomap = map_asset.geomap.as_mut().unwrap();
 
     // for each texture, load it into the asset server
     for texture_info in geomap.textures.iter() {
         let texture_name = texture_info.1;
-        let file = format!("textures/{}.png", texture_name);
 
-        let bytes = load_context.read_asset_bytes(&file).await;
-
-        if let Ok(bytes) = bytes {
-            let texture = Image::from_buffer(
-                &bytes,
-                ImageType::Extension("png"),
-                CompressedImageFormats::all(),
-                false,
-                ImageSampler::Descriptor(ImageSamplerDescriptor {
-                    address_mode_u: ImageAddressMode::Repeat,
-                    address_mode_v: ImageAddressMode::Repeat,
-                    ..default()
-                }),
-                RenderAssetUsages::RENDER_WORLD,
-            );
-
-            if texture.is_ok() {
-                let texture = texture.unwrap();
-                let texture_handle = load_context.add_loaded_labeled_asset(
-                    format!("textures/{}", texture_name),
-                    LoadedAsset::from(texture.clone()),
-                );
-                let mat = StandardMaterial {
-                    base_color_texture: Some(texture_handle),
-                    perceptual_roughness: 0.55,
-                    metallic: 0.5,
-                    ..default()
-                };
-                let mat_handle = load_context.add_loaded_labeled_asset::<StandardMaterial>(
-                    format!("materials/{}", texture_name),
-                    LoadedAsset::from(mat),
-                );
-                map_asset
-                    .material_handles
-                    .insert(texture_name.clone(), mat_handle);
-                map_asset
-                    .texture_sizes
-                    .insert(texture_name.clone(), (texture.width(), texture.height()));
+        let base_color_texture = match load_texture(
+            format!("textures/{}.png", texture_name),
+            true,
+            load_context,
+        )
+        .await
+        {
+            Ok(texture) => Some(texture),
+            Err(MapAssetLoaderError::ReadAssetBytes(_)) => None,
+            Err(err) => {
+                return Err(err);
             }
+        };
+
+        if base_color_texture.is_some() {
+            let (base_color_texture, texture_size) = base_color_texture.unwrap();
+
+            let metallic_roughness_texture = match load_texture(
+                format!("textures/{}.metallic_roughness.png", texture_name),
+                false,
+                load_context,
+            )
+            .await
+            {
+                Ok(texture) => Some(texture),
+                Err(MapAssetLoaderError::ReadAssetBytes(_)) => None,
+                Err(err) => {
+                    return Err(err);
+                }
+            };
+
+            let normal_map_texture = match load_texture(
+                format!("textures/{}.normal_map.png", texture_name),
+                false,
+                load_context,
+            )
+            .await
+            {
+                Ok(texture) => Some(texture),
+                Err(MapAssetLoaderError::ReadAssetBytes(_)) => None,
+                Err(err) => {
+                    return Err(err);
+                }
+            };
+
+            let depth_map_texture = match load_texture(
+                format!("textures/{}.depth_map.png", texture_name),
+                false,
+                load_context,
+            )
+            .await
+            {
+                Ok(texture) => Some(texture),
+                Err(MapAssetLoaderError::ReadAssetBytes(_)) => None,
+                Err(err) => {
+                    return Err(err);
+                }
+            };
+
+            let occlusion_texture = match load_texture(
+                format!("textures/{}.occlusion.png", texture_name),
+                false,
+                load_context,
+            )
+            .await
+            {
+                Ok(texture) => Some(texture),
+                Err(MapAssetLoaderError::ReadAssetBytes(_)) => None,
+                Err(err) => {
+                    return Err(err);
+                }
+            };
+
+            let specular_transmission_texture = match load_texture(
+                format!("textures/{}.specular_transmission.png", texture_name),
+                false,
+                load_context,
+            )
+            .await
+            {
+                Ok(texture) => Some(texture),
+                Err(MapAssetLoaderError::ReadAssetBytes(_)) => None,
+                Err(err) => {
+                    return Err(err);
+                }
+            };
+
+            let (perceptual_roughness, metallic) = if metallic_roughness_texture.is_some() {
+                (1.0, 1.0)
+            } else {
+                (0.55, 0.0)
+            };
+
+            let alpha_mode = if texture_name.ends_with("-m") {
+                AlphaMode::Mask(0.05)
+            } else {
+                AlphaMode::Opaque
+            };
+
+            let (specular_transmission, thickness) = if specular_transmission_texture.is_some() {
+                (1.0, 0.1)
+            } else {
+                (0.0, 0.0)
+            };
+
+            let mat = StandardMaterial {
+                perceptual_roughness,
+                metallic,
+                base_color_texture: Some(base_color_texture),
+                metallic_roughness_texture: metallic_roughness_texture.map(|(t, _)| t),
+                normal_map_texture: normal_map_texture.map(|(t, _)| t),
+                depth_map: depth_map_texture.map(|(t, _)| t),
+                occlusion_texture: occlusion_texture.map(|(t, _)| t),
+                parallax_mapping_method: ParallaxMappingMethod::Relief { max_steps: 20 },
+                specular_transmission,
+                thickness,
+                specular_transmission_texture: specular_transmission_texture.map(|(t, _)| t),
+                parallax_depth_scale: 0.04,
+                alpha_mode,
+                ..default()
+            };
+
+            let mat_handle = load_context.add_loaded_labeled_asset::<StandardMaterial>(
+                format!("materials/{}", texture_name),
+                LoadedAsset::from(mat),
+            );
+            map_asset
+                .material_handles
+                .insert(texture_name.clone(), mat_handle);
+            map_asset
+                .texture_sizes
+                .insert(texture_name.clone(), texture_size);
         }
     }
+
+    Ok(())
+}
+
+async fn load_texture<'a>(
+    file: String,
+    is_srgb: bool,
+    load_context: &mut LoadContext<'a>,
+) -> Result<(Handle<Image>, (u32, u32)), MapAssetLoaderError> {
+    let bytes = load_context.read_asset_bytes(&file).await?;
+
+    let image = Image::from_buffer(
+        &bytes,
+        ImageType::Extension("png"),
+        CompressedImageFormats::all(),
+        is_srgb,
+        ImageSampler::Descriptor(ImageSamplerDescriptor {
+            address_mode_u: ImageAddressMode::Repeat,
+            address_mode_v: ImageAddressMode::Repeat,
+            mag_filter: ImageFilterMode::Linear,
+            min_filter: ImageFilterMode::Linear,
+            mipmap_filter: ImageFilterMode::Linear,
+            ..default()
+        }),
+        RenderAssetUsages::RENDER_WORLD,
+    )?;
+
+    let handle = load_context.add_loaded_labeled_asset(file, LoadedAsset::from(image.clone()));
+
+    Ok((handle, (image.width(), image.height())))
 }

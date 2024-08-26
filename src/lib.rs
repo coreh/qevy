@@ -1,7 +1,8 @@
 use bevy::asset::io::Reader;
-use bevy::asset::{AssetLoader, Handle, LoadContext};
+use bevy::asset::{AssetLoader, Handle, LoadContext, ReadAssetBytesError};
 use bevy::prelude::*;
 use bevy::reflect::TypePath;
+use bevy::render::texture::TextureError;
 use components::MapUnits;
 use std::collections::BTreeMap;
 use thiserror::Error;
@@ -38,6 +39,12 @@ impl MapAsset {
 pub enum MapAssetLoaderError {
     #[error("io error: {0}")]
     Io(#[from] std::io::Error),
+
+    #[error("read asset bytes error: {0}")]
+    ReadAssetBytes(#[from] ReadAssetBytesError),
+
+    #[error("texture error: {0}")]
+    TextureError(#[from] TextureError),
 }
 
 #[derive(Default)]
