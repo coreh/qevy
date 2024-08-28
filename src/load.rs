@@ -182,7 +182,7 @@ pub(crate) async fn load_map_textures<'a>(
             };
 
             let alpha_mode = if texture_name.ends_with("-m") {
-                AlphaMode::Mask(0.05)
+                AlphaMode::Mask(0.5)
             } else {
                 AlphaMode::Opaque
             };
