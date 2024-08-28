@@ -100,6 +100,7 @@ pub struct BrushEntity;
 #[derive(Default, Component)]
 pub struct Brush {
     pub texture_size: (u32, u32),
+    pub texture_name: String,
 }
 
 #[derive(Component)]

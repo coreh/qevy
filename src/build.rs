@@ -19,6 +19,7 @@ pub struct SpawnMeshEvent {
     mesh: Mesh,
     collider: Option<Entity>,
     material: Handle<StandardMaterial>,
+    texture_name: String,
     texture_size: (u32, u32),
 }
 
@@ -252,6 +253,7 @@ pub fn build_map(
                                             .get(texture_name)
                                             .unwrap()
                                             .clone(),
+                                        texture_name: texture_name.to_string(),
                                     });
                                 }
                             }
@@ -309,6 +311,7 @@ pub fn build_map(
                                             .get(texture_name)
                                             .unwrap()
                                             .clone(),
+                                        texture_name: texture_name.to_string(),
                                     });
                                 }
                             }
@@ -340,6 +343,7 @@ pub fn mesh_spawn_system(
                 children.spawn((
                     Brush {
                         texture_size: ev.texture_size,
+                        texture_name: ev.texture_name.to_owned(),
                     },
                     PbrBundle {
                         mesh: meshes.add(ev.mesh.to_owned()),
@@ -354,6 +358,7 @@ pub fn mesh_spawn_system(
                 children.spawn((
                     Brush {
                         texture_size: ev.texture_size,
+                        texture_name: ev.texture_name.to_owned(),
                     },
                     PbrBundle {
                         mesh: meshes.add(ev.mesh.to_owned()),
