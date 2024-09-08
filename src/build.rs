@@ -218,7 +218,7 @@ pub fn build_map(
                                 VisibilityBundle::default(),
                             ));
                             if classname == "trigger_multiple" {
-                                collider.insert((
+                                collider = collider.insert((
                                     TriggerMultiple {
                                         target: props.get("target").unwrap().to_string(),
                                     },
@@ -226,7 +226,7 @@ pub fn build_map(
                                     avian3d::prelude::Sensor,
                                 ));
                             } else if classname == "trigger_once" {
-                                collider.insert((
+                                collider = collider.insert((
                                     TriggerOnce {
                                         target: props.get("target").unwrap().to_string(),
                                     },
@@ -234,7 +234,7 @@ pub fn build_map(
                                     avian3d::prelude::Sensor,
                                 ));
                             } else {
-                                collider.insert((avian3d::prelude::RigidBody::Static,));
+                                collider = collider.insert((avian3d::prelude::RigidBody::Static,));
                             }
 
                             for (mesh, texture_name) in meshes_to_spawn {
@@ -409,8 +409,8 @@ pub fn post_build_map_system(
                     });
                 }
                 "mover" => {
-                    let mut mover_entity = commands.entity(entity);
-                    mover_entity.insert((
+                    let mover_entity = commands.entity(entity);
+                    let mover_entity = mover_entity.insert((
                         Mover {
                             moving_time: Duration::from_secs_f32(
                                 props.get_property_as_f32("moving_time", 1.0),
