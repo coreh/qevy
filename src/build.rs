@@ -111,7 +111,7 @@ pub fn build_map(
             };
 
             commands.entity(map_entity).with_children(|children| {
-                let mut entity = children.spawn((MapEntityProperties {
+                let entity = children.spawn((MapEntityProperties {
                     classname: classname.to_string(),
                     transform: Transform::from_translation(translation)
                         * Transform::from_rotation(rotation),

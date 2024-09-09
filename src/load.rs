@@ -1,11 +1,9 @@
 use crate::build::SpawnMeshEvent;
 use crate::{components::*, MapAssetLoaderError};
 use crate::{MapAsset, PostBuildMapEvent};
-use async_lock::futures::Read;
 use bevy::asset::io::Reader;
 use bevy::asset::LoadContext;
 use bevy::asset::LoadedAsset;
-use bevy::asset::{AsyncReadExt, ReadAssetBytesError};
 use bevy::prelude::*;
 use bevy::render::render_asset::RenderAssetUsages;
 use bevy::render::texture::ImageAddressMode;
