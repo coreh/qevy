@@ -173,13 +173,14 @@ pub(crate) async fn load_map_textures<'a>(
                 }
             };
 
-            let (perceptual_roughness, metallic) = if metallic_roughness_texture.is_some() {
-                (1.0, 1.0)
-            } else {
-                (0.55, 0.0)
-            };
+            let (perceptual_roughness, metallic, reflectance) =
+                if metallic_roughness_texture.is_some() {
+                    (1.0, 1.0, 0.5)
+                } else {
+                    (0.55, 0.0, 0.0)
+                };
 
-            let alpha_mode = if texture_name.ends_with("-m") {
+            let alpha_mode = if texture_name.ends_with("-m") || texture_name.ends_with("-f") {
                 AlphaMode::Mask(0.5)
             } else {
                 AlphaMode::Opaque
@@ -191,9 +192,16 @@ pub(crate) async fn load_map_textures<'a>(
                 (0.0, 0.0)
             };
 
+            let diffuse_transmission = if texture_name.contains("-f") {
+                0.5
+            } else {
+                0.0
+            };
+
             let mat = StandardMaterial {
                 perceptual_roughness,
                 metallic,
+                reflectance,
                 base_color_texture: Some(base_color_texture),
                 metallic_roughness_texture: metallic_roughness_texture.map(|(t, _)| t),
                 normal_map_texture: normal_map_texture.map(|(t, _)| t),
@@ -201,6 +209,7 @@ pub(crate) async fn load_map_textures<'a>(
                 occlusion_texture: occlusion_texture.map(|(t, _)| t),
                 parallax_mapping_method: ParallaxMappingMethod::Relief { max_steps: 20 },
                 specular_transmission,
+                diffuse_transmission,
                 thickness,
                 specular_transmission_texture: specular_transmission_texture.map(|(t, _)| t),
                 parallax_depth_scale: 0.04,

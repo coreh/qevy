@@ -164,8 +164,8 @@ pub fn build_map(
                 for brush_id in brushes.iter() {
                     let brush_faces = geomap.brush_faces.get(brush_id).unwrap();
                     let mut brush_vertices: Vec<Vec3> = Vec::new();
-
                     let mut meshes_to_spawn = Vec::new();
+                    let mut has_foliage = false;
 
                     for face_id in brush_faces.iter() {
                         let texture_id = geomap.face_textures.get(face_id).unwrap();
@@ -175,7 +175,7 @@ pub fn build_map(
                             to_bevy_indecies(&face_triangle_indices.get(&face_id).unwrap());
                         let vertices =
                             to_bevy_vertices(&face_vertices.get(&face_id).unwrap(), &map_units);
-                        let normals = to_bevy_vec3s(&face_normals.get(&face_id).unwrap());
+                        let mut normals = to_bevy_vec3s(&face_normals.get(&face_id).unwrap());
                         let uvs = uvs_to_bevy_vec2s(&face_uvs.get(&face_id).unwrap());
                         brush_vertices.extend(vertices.clone());
 
@@ -186,6 +186,13 @@ pub fn build_map(
                             || texture_name == "common/clip"
                         {
                             continue;
+                        }
+
+                        // For foliage, we make all the normals point up, since we want the
+                        // texture to be lit "evenly" from above, to avoid the "paper cutout" look
+                        if texture_name.contains("-f") {
+                            normals = normals.iter().map(|_| Vec3::new(0.0, 1.0, 0.0)).collect();
+                            has_foliage = true;
                         }
 
                         let mut mesh = Mesh::new(
@@ -233,6 +240,8 @@ pub fn build_map(
                                     avian3d::prelude::RigidBody::Dynamic,
                                     avian3d::prelude::Sensor,
                                 ));
+                            } else if has_foliage {
+                                // Don't collide with foliage
                             } else {
                                 collider = collider.insert((avian3d::prelude::RigidBody::Static,));
                             }
@@ -291,6 +300,8 @@ pub fn build_map(
                                     ActiveCollisionTypes::default()
                                         | ActiveCollisionTypes::KINEMATIC_KINEMATIC,
                                 ));
+                            } else if only_foliage {
+                                // Don't collide with foliage
                             } else {
                                 collider.insert((bevy_rapier3d::prelude::RigidBody::Fixed,));
                             }
