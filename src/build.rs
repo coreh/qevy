@@ -173,6 +173,11 @@ pub fn build_map(
                         let texture_id = geomap.face_textures.get(face_id).unwrap();
                         let texture_name = geomap.textures.get(texture_id).unwrap();
 
+                        if !face_triangle_indices.contains_key(&face_id) {
+                            println!("face {} has no indices", face_id);
+                            continue;
+                        }
+
                         let indices =
                             to_bevy_indecies(&face_triangle_indices.get(&face_id).unwrap());
                         let vertices =
