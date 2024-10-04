@@ -20,6 +20,7 @@ use crate::{MapAsset, PostBuildMapEvent};
 #[derive(Event)]
 pub struct SpawnMeshEvent {
     map: Entity,
+    brush: Entity,
     mesh: Mesh,
     collider: Option<Entity>,
     material: Handle<StandardMaterial>,
@@ -164,6 +165,7 @@ pub fn build_map(
 
         commands.entity(map_entity).with_children(|children| {
             let mut entity = children.spawn(brush_entity);
+            let brush_entity = entity.id();
             entity.with_children(|gchildren| {
                 for brush_id in brushes.iter() {
                     let brush_faces = geomap.brush_faces.get(brush_id).unwrap();
@@ -268,6 +270,7 @@ pub fn build_map(
                                 if map_asset.material_handles.contains_key(&texture_name) {
                                     spawn_mesh_event.send(SpawnMeshEvent {
                                         map: map_entity,
+                                        brush: brush_entity,
                                         mesh: mesh,
                                         collider: Some(collider.id()),
                                         material: map_asset
@@ -368,7 +371,7 @@ pub fn mesh_spawn_system(
     transforms: Query<&Transform>,
 ) {
     let mut consolidated_meshes: HashMap<
-        (Handle<StandardMaterial>, (i32, i32, i32)),
+        (Entity, Handle<StandardMaterial>, (i32, i32, i32)),
         (Option<Entity>, Entity, Mesh, (u32, u32), String),
     > = HashMap::default();
 
@@ -388,7 +391,7 @@ pub fn mesh_spawn_system(
             ((transform.translation.y + aabb.center.y) / 50.0).floor() as i32,
             ((transform.translation.z + aabb.center.z) / 50.0).floor() as i32,
         );
-        match consolidated_meshes.entry((ev.material.clone(), bucket)) {
+        match consolidated_meshes.entry((ev.brush, ev.material.clone(), bucket)) {
             Entry::Occupied(mut entry) => {
                 let (other_collider, map, mesh, _, _) = entry.get_mut();
                 let other_transform: &Transform = other_collider
@@ -447,7 +450,8 @@ pub fn mesh_spawn_system(
     // }
 
     // let mut a = 0.0;
-    for ((material, _), (collider, map, mesh, texture_size, texture_name)) in consolidated_meshes {
+    for ((_, material, _), (collider, map, mesh, texture_size, texture_name)) in consolidated_meshes
+    {
         // if this mesh has a collider, make it a child of the collider
         if let Some(collider) = collider {
             commands.entity(collider).with_children(|children| {
