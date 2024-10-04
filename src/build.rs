@@ -1,6 +1,7 @@
 use avian3d::prelude::Collider;
 use bevy::prelude::*;
 use bevy::render::mesh::Indices;
+use bevy::render::primitives::Aabb;
 use bevy::render::render_asset::RenderAssetUsages;
 use bevy::render::render_resource::PrimitiveTopology;
 use bevy::utils::Entry;
@@ -362,40 +363,133 @@ pub fn build_map(
 pub fn mesh_spawn_system(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
+    // mut materials: ResMut<Assets<StandardMaterial>>,
     mut spawn_mesh_event: EventReader<SpawnMeshEvent>,
+    transforms: Query<&Transform>,
 ) {
+    let mut consolidated_meshes: HashMap<
+        (Handle<StandardMaterial>, (i32, i32, i32)),
+        (Option<Entity>, Entity, Mesh, (u32, u32), String),
+    > = HashMap::default();
+
+    // let mut i = 0;
     for ev in spawn_mesh_event.read() {
+        // i += 1;
+        let transform = ev
+            .collider
+            .map(|c| transforms.get(c).unwrap_or(&Transform::IDENTITY))
+            .unwrap_or_else(|| transforms.get(ev.map).unwrap_or(&Transform::IDENTITY));
+        let aabb = ev
+            .mesh
+            .compute_aabb()
+            .unwrap_or(Aabb::from_min_max(Vec3::ZERO, Vec3::ZERO));
+        let bucket = (
+            ((transform.translation.x + aabb.center.x) / 50.0).floor() as i32,
+            ((transform.translation.y + aabb.center.y) / 50.0).floor() as i32,
+            ((transform.translation.z + aabb.center.z) / 50.0).floor() as i32,
+        );
+        match consolidated_meshes.entry((ev.material.clone(), bucket)) {
+            Entry::Occupied(mut entry) => {
+                let (other_collider, map, mesh, _, _) = entry.get_mut();
+                let other_transform: &Transform = other_collider
+                    .map(|c| transforms.get(c).unwrap_or(&Transform::IDENTITY))
+                    .unwrap_or_else(|| transforms.get(*map).unwrap_or(&Transform::IDENTITY));
+
+                let final_transform = Transform::from_matrix(
+                    transform.compute_matrix().inverse() * other_transform.compute_matrix(),
+                );
+
+                mesh.merge(&ev.mesh.clone().transformed_by(final_transform));
+
+                if let Some(collider) = ev.collider {
+                    commands.entity(collider).with_children(|children| {
+                        children.spawn((
+                            Brush {
+                                texture_size: ev.texture_size,
+                                texture_name: ev.texture_name.to_owned(),
+                            },
+                            SpatialBundle {
+                                transform: *transform,
+                                ..default()
+                            },
+                        ));
+                    });
+                } else {
+                    commands.entity(ev.map).with_children(|children| {
+                        children.spawn((
+                            Brush {
+                                texture_size: ev.texture_size,
+                                texture_name: ev.texture_name.to_owned(),
+                            },
+                            SpatialBundle {
+                                transform: *transform,
+                                ..default()
+                            },
+                        ));
+                    });
+                }
+            }
+            Entry::Vacant(entry) => {
+                entry.insert((
+                    ev.collider,
+                    ev.map,
+                    ev.mesh.to_owned(),
+                    ev.texture_size,
+                    ev.texture_name.to_owned(),
+                ));
+            }
+        }
+    }
+
+    // if i > 0 {
+    //     println!("Original meshes: {}", i);
+    //     println!("Consolidated meshes: {}", consolidated_meshes.len());
+    // }
+
+    // let mut a = 0.0;
+    for ((material, _), (collider, map, mesh, texture_size, texture_name)) in consolidated_meshes {
         // if this mesh has a collider, make it a child of the collider
-        if let Some(collider) = ev.collider {
+        if let Some(collider) = collider {
             commands.entity(collider).with_children(|children| {
                 children.spawn((
                     Brush {
-                        texture_size: ev.texture_size,
-                        texture_name: ev.texture_name.to_owned(),
+                        texture_size: texture_size,
+                        texture_name: texture_name.to_owned(),
                     },
                     PbrBundle {
-                        mesh: meshes.add(ev.mesh.to_owned()),
-                        material: ev.material.to_owned(),
+                        mesh: meshes.add(mesh.to_owned()),
+                        material: material.to_owned(),
+                        // material: materials.add(StandardMaterial {
+                        //     base_color: Color::WHITE,
+                        //     emissive: Color::hsv(a, 1.0, 1.0).into(),
+                        //     ..default()
+                        // }),
                         ..default()
                     },
                 ));
             });
         // otherwise, it's a child of the map
         } else {
-            commands.entity(ev.map).with_children(|children| {
+            commands.entity(map).with_children(|children| {
                 children.spawn((
                     Brush {
-                        texture_size: ev.texture_size,
-                        texture_name: ev.texture_name.to_owned(),
+                        texture_size: texture_size,
+                        texture_name: texture_name.to_owned(),
                     },
                     PbrBundle {
-                        mesh: meshes.add(ev.mesh.to_owned()),
-                        material: ev.material.to_owned(),
+                        mesh: meshes.add(mesh.to_owned()),
+                        material: material.to_owned(),
+                        // material: materials.add(StandardMaterial {
+                        //     base_color: Color::WHITE,
+                        //     emissive: Color::hsv(a, 1.0, 1.0).into(),
+                        //     ..default()
+                        // }),
                         ..default()
                     },
                 ));
             });
         }
+        // a += 40.0;
     }
 }
 
