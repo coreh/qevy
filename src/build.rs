@@ -1,3 +1,4 @@
+use avian3d::prelude::Collider;
 use bevy::prelude::*;
 use bevy::render::mesh::Indices;
 use bevy::render::render_asset::RenderAssetUsages;
@@ -257,6 +258,7 @@ pub fn build_map(
                                 ));
                             } else if has_foliage {
                                 // Don't collide with foliage
+                                collider = collider.remove::<Collider>();
                             } else {
                                 collider = collider.insert((avian3d::prelude::RigidBody::Static,));
                             }
