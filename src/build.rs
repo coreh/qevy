@@ -20,7 +20,7 @@ use crate::{MapAsset, PostBuildMapEvent};
 #[derive(Event)]
 pub struct SpawnMeshEvent {
     map: Entity,
-    brush: Entity,
+    brush: Option<Entity>,
     mesh: Mesh,
     collider: Option<Entity>,
     material: Handle<StandardMaterial>,
@@ -165,7 +165,11 @@ pub fn build_map(
 
         commands.entity(map_entity).with_children(|children| {
             let mut entity = children.spawn(brush_entity);
-            let brush_entity = entity.id();
+            let brush_entity = if classname != "func_group" {
+                Some(entity.id())
+            } else {
+                None
+            };
             entity.with_children(|gchildren| {
                 for brush_id in brushes.iter() {
                     let brush_faces = geomap.brush_faces.get(brush_id).unwrap();
@@ -371,7 +375,7 @@ pub fn mesh_spawn_system(
     transforms: Query<&Transform>,
 ) {
     let mut consolidated_meshes: HashMap<
-        (Entity, Handle<StandardMaterial>, (i32, i32, i32)),
+        (Option<Entity>, Handle<StandardMaterial>, (i32, i32, i32)),
         (Option<Entity>, Entity, Mesh, (u32, u32), String),
     > = HashMap::default();
 
