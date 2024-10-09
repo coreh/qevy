@@ -35,10 +35,10 @@ pub fn to_bevy_vertices(vertices: &Vec<Vector3>, map_units: &MapUnits) -> Vec<Ve
     for vertex in vertices {
         match map_units {
             MapUnits::Bevy => bevy_vertices
-                .push(Vec3::new(vertex.y, vertex.z, vertex.x) * SHAMBLER_UNITS_TO_BEVY_METERS),
-            MapUnits::Trenchbroom => bevy_vertices.push(Vec3::new(vertex.y, vertex.z, vertex.x)),
+                .push(Vec3::new(vertex.y as f32, vertex.z as f32, vertex.x as f32) * SHAMBLER_UNITS_TO_BEVY_METERS),
+            MapUnits::Trenchbroom => bevy_vertices.push(Vec3::new(vertex.y as f32, vertex.z as f32, vertex.x as f32)),
             MapUnits::Custom(ratio) => {
-                bevy_vertices.push(Vec3::new(vertex.y, vertex.z, vertex.x) * (1.0 / ratio))
+                bevy_vertices.push(Vec3::new(vertex.y as f32, vertex.z as f32, vertex.x as f32) * (1.0 / ratio))
             }
         }
     }
@@ -48,7 +48,7 @@ pub fn to_bevy_vertices(vertices: &Vec<Vector3>, map_units: &MapUnits) -> Vec<Ve
 pub fn to_bevy_vec3s(normals: &Vec<Vector3>) -> Vec<Vec3> {
     let mut bevy_normals: Vec<Vec3> = Vec::new();
     for normal in normals {
-        bevy_normals.push(Vec3::new(normal.y, normal.z, normal.x));
+        bevy_normals.push(Vec3::new(normal.y as f32, normal.z as f32, normal.x as f32));
     }
     bevy_normals
 }
@@ -56,7 +56,7 @@ pub fn to_bevy_vec3s(normals: &Vec<Vector3>) -> Vec<Vec3> {
 pub fn uvs_to_bevy_vec2s(uvs: &Vec<Vector2>) -> Vec<Vec2> {
     let mut bevy_uvs: Vec<Vec2> = Vec::new();
     for uv in uvs {
-        bevy_uvs.push(Vec2::new(uv.x, uv.y));
+        bevy_uvs.push(Vec2::new(uv.x as f32, uv.y as f32));
     }
     bevy_uvs
 }
