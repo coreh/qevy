@@ -159,6 +159,20 @@ pub(crate) async fn load_map_textures<'a>(
                 }
             };
 
+            let emissive_texture = match load_texture(
+                format!("textures/{}.emissive.png", texture_name),
+                false,
+                load_context,
+            )
+            .await
+            {
+                Ok(texture) => Some(texture),
+                Err(MapAssetLoaderError::ReadAssetBytes(_)) => None,
+                Err(err) => {
+                    return Err(err);
+                }
+            };
+
             let specular_transmission_texture = match load_texture(
                 format!("textures/{}.specular_transmission.png", texture_name),
                 false,
@@ -214,6 +228,12 @@ pub(crate) async fn load_map_textures<'a>(
                 0.0
             };
 
+            let emissive = if emissive_texture.is_some() {
+                LinearRgba::new(30.0, 30.0, 30.0, 1.0)
+            } else {
+                LinearRgba::BLACK
+            };
+
             let mat = StandardMaterial {
                 perceptual_roughness,
                 metallic,
@@ -229,6 +249,8 @@ pub(crate) async fn load_map_textures<'a>(
                 thickness,
                 specular_transmission_texture: specular_transmission_texture.map(|(t, _)| t),
                 diffuse_transmission_texture: diffuse_transmission_texture.map(|(t, _)| t),
+                emissive_texture: emissive_texture.map(|(t, _)| t),
+                emissive,
                 parallax_depth_scale: 0.04,
                 alpha_mode,
                 ..default()
