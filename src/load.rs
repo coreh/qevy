@@ -173,6 +173,20 @@ pub(crate) async fn load_map_textures<'a>(
                 }
             };
 
+            let diffuse_transmission_texture = match load_texture(
+                format!("textures/{}.diffuse_transmission.png", texture_name),
+                false,
+                load_context,
+            )
+            .await
+            {
+                Ok(texture) => Some(texture),
+                Err(MapAssetLoaderError::ReadAssetBytes(_)) => None,
+                Err(err) => {
+                    return Err(err);
+                }
+            };
+
             let (perceptual_roughness, metallic, reflectance) =
                 if metallic_roughness_texture.is_some() {
                     (1.0, 1.0, 0.5)
@@ -192,7 +206,9 @@ pub(crate) async fn load_map_textures<'a>(
                 (0.0, 0.0)
             };
 
-            let diffuse_transmission = if texture_name.contains("-f") {
+            let diffuse_transmission = if diffuse_transmission_texture.is_some() {
+                1.0
+            } else if texture_name.contains("-f") {
                 0.5
             } else {
                 0.0
@@ -212,6 +228,7 @@ pub(crate) async fn load_map_textures<'a>(
                 diffuse_transmission,
                 thickness,
                 specular_transmission_texture: specular_transmission_texture.map(|(t, _)| t),
+                diffuse_transmission_texture: diffuse_transmission_texture.map(|(t, _)| t),
                 parallax_depth_scale: 0.04,
                 alpha_mode,
                 ..default()
