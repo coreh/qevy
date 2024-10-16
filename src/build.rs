@@ -1,4 +1,5 @@
 use avian3d::prelude::Collider;
+use bevy::gizmos::aabb;
 use bevy::prelude::*;
 use bevy::render::mesh::Indices;
 use bevy::render::primitives::Aabb;
@@ -376,7 +377,7 @@ pub fn mesh_spawn_system(
 ) {
     let mut consolidated_meshes: HashMap<
         (Option<Entity>, Handle<StandardMaterial>, (i32, i32, i32)),
-        (Option<Entity>, Entity, Mesh, (u32, u32), String),
+        (Option<Entity>, Entity, Mesh, (u32, u32), String, Aabb),
     > = HashMap::default();
 
     // let mut i = 0;
@@ -397,7 +398,7 @@ pub fn mesh_spawn_system(
         );
         match consolidated_meshes.entry((ev.brush, ev.material.clone(), bucket)) {
             Entry::Occupied(mut entry) => {
-                let (other_collider, map, mesh, _, _) = entry.get_mut();
+                let (other_collider, map, mesh, _, _, _) = entry.get_mut();
                 let other_transform: &Transform = other_collider
                     .map(|c| transforms.get(c).unwrap_or(&Transform::IDENTITY))
                     .unwrap_or_else(|| transforms.get(*map).unwrap_or(&Transform::IDENTITY));
@@ -414,6 +415,7 @@ pub fn mesh_spawn_system(
                             Brush {
                                 texture_size: ev.texture_size,
                                 texture_name: ev.texture_name.to_owned(),
+                                original_aabb: aabb,
                             },
                             SpatialBundle {
                                 transform: *transform,
@@ -427,6 +429,7 @@ pub fn mesh_spawn_system(
                             Brush {
                                 texture_size: ev.texture_size,
                                 texture_name: ev.texture_name.to_owned(),
+                                original_aabb: aabb,
                             },
                             SpatialBundle {
                                 transform: *transform,
@@ -443,6 +446,7 @@ pub fn mesh_spawn_system(
                     ev.mesh.to_owned(),
                     ev.texture_size,
                     ev.texture_name.to_owned(),
+                    aabb,
                 ));
             }
         }
@@ -454,7 +458,8 @@ pub fn mesh_spawn_system(
     // }
 
     // let mut a = 0.0;
-    for ((_, material, _), (collider, map, mesh, texture_size, texture_name)) in consolidated_meshes
+    for ((_, material, _), (collider, map, mesh, texture_size, texture_name, aabb)) in
+        consolidated_meshes
     {
         // if this mesh has a collider, make it a child of the collider
         if let Some(collider) = collider {
@@ -463,6 +468,7 @@ pub fn mesh_spawn_system(
                     Brush {
                         texture_size: texture_size,
                         texture_name: texture_name.to_owned(),
+                        original_aabb: aabb,
                     },
                     PbrBundle {
                         mesh: meshes.add(mesh.to_owned()),
@@ -483,6 +489,7 @@ pub fn mesh_spawn_system(
                     Brush {
                         texture_size: texture_size,
                         texture_name: texture_name.to_owned(),
+                        original_aabb: aabb,
                     },
                     PbrBundle {
                         mesh: meshes.add(mesh.to_owned()),

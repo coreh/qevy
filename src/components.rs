@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, render::primitives::Aabb};
 use std::{collections::BTreeMap, time::Duration};
 
 #[derive(Default, Component)]
@@ -101,6 +101,7 @@ pub struct BrushEntity;
 pub struct Brush {
     pub texture_size: (u32, u32),
     pub texture_name: String,
+    pub original_aabb: Aabb,
 }
 
 #[derive(Component)]
