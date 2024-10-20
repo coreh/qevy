@@ -279,6 +279,13 @@ async fn load_texture<'a>(
 ) -> Result<(Handle<Image>, (u32, u32)), MapAssetLoaderError> {
     let bytes = load_context.read_asset_bytes(&file).await?;
 
+    let filter = if file.contains("-m") || file.contains("-f") || file.contains(".normal_map") {
+        // avoid getting the edges of masked shapes and weird artifacts in normal map lighting
+        ImageFilterMode::Nearest
+    } else {
+        ImageFilterMode::Linear
+    };
+
     let image = Image::from_buffer(
         &bytes,
         ImageType::Extension("png"),
@@ -287,9 +294,9 @@ async fn load_texture<'a>(
         ImageSampler::Descriptor(ImageSamplerDescriptor {
             address_mode_u: ImageAddressMode::Repeat,
             address_mode_v: ImageAddressMode::Repeat,
-            mag_filter: ImageFilterMode::Linear,
-            min_filter: ImageFilterMode::Linear,
-            mipmap_filter: ImageFilterMode::Linear,
+            mag_filter: filter,
+            min_filter: filter,
+            mipmap_filter: filter,
             ..default()
         }),
         RenderAssetUsages::RENDER_WORLD,
