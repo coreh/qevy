@@ -1,5 +1,4 @@
 use avian3d::prelude::Collider;
-use bevy::gizmos::aabb;
 use bevy::prelude::*;
 use bevy::render::mesh::Indices;
 use bevy::render::primitives::Aabb;
@@ -228,7 +227,7 @@ pub fn build_map(
 
                         match meshes_to_spawn.entry(texture_name.clone()) {
                             Entry::Occupied(mut entry) => {
-                                let mut existing_mesh = entry.get_mut();
+                                let existing_mesh = entry.get_mut();
                                 existing_mesh.merge(&mesh);
                             }
                             Entry::Vacant(entry) => {
