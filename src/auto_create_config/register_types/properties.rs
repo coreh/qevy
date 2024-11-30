@@ -18,7 +18,7 @@ impl Plugin for QevyPropertyPlugin {
         // Register all types that implement QevyProperty here
         register_qevy_property_types!(
             app, u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f64, f32, String,
-            bool, Color
+            bool, Color, Vec2, Vec3
         );
         app.register_type::<QevyAngles>();
     }
@@ -80,6 +80,36 @@ impl QevyProperty for Color {
             format!(
                 "\t{}(color) : \"{}\" : \"{}\" : \"{}\"",
                 field_name, field_name, rgb_string, field_description
+            )
+            .into_boxed_str(),
+        )
+    }
+}
+
+// Implementation for Vec2
+impl QevyProperty for Vec2 {
+    fn get_fgd_string(&self, field_name: &str, field_description: &str) -> &'static str {
+        let formatted_value = format!("{} {}", self.x, self.y);
+
+        Box::leak(
+            format!(
+                "\t{}(string) : \"{}\" : \"{}\" : \"{}\"",
+                field_name, field_name, formatted_value, field_description
+            )
+            .into_boxed_str(),
+        )
+    }
+}
+
+// Implementation for Vec3
+impl QevyProperty for Vec3 {
+    fn get_fgd_string(&self, field_name: &str, field_description: &str) -> &'static str {
+        let formatted_value = format!("{} {} {}", self.x, self.y, self.z);
+
+        Box::leak(
+            format!(
+                "\t{}(string) : \"{}\" : \"{}\" : \"{}\"",
+                field_name, field_name, formatted_value, field_description
             )
             .into_boxed_str(),
         )
