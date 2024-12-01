@@ -1,6 +1,7 @@
 use avian3d::prelude::Collider;
 use bevy::prelude::*;
 use bevy::render::mesh::Indices;
+use bevy::render::mesh::MeshAabb;
 use bevy::render::primitives::Aabb;
 use bevy::render::render_asset::RenderAssetUsages;
 use bevy::render::render_resource::PrimitiveTopology;
@@ -116,7 +117,7 @@ pub fn build_map(
             };
 
             commands.entity(map_entity).with_children(|children| {
-                let entity = children.spawn((MapEntityProperties {
+                let mut entity = children.spawn((MapEntityProperties {
                     classname: classname.to_string(),
                     transform: Transform::from_translation(translation)
                         * Transform::from_rotation(rotation),
@@ -248,7 +249,7 @@ pub fn build_map(
                                 VisibilityBundle::default(),
                             ));
                             if classname == "trigger_multiple" {
-                                collider = collider.insert((
+                                collider.insert((
                                     TriggerMultiple {
                                         target: props.get("target").unwrap().to_string(),
                                     },
@@ -256,7 +257,7 @@ pub fn build_map(
                                     avian3d::prelude::Sensor,
                                 ));
                             } else if classname == "trigger_once" {
-                                collider = collider.insert((
+                                collider.insert((
                                     TriggerOnce {
                                         target: props.get("target").unwrap().to_string(),
                                     },
@@ -265,9 +266,9 @@ pub fn build_map(
                                 ));
                             } else if has_foliage {
                                 // Don't collide with foliage
-                                collider = collider.remove::<Collider>();
+                                collider.remove::<Collider>();
                             } else {
-                                collider = collider.insert((avian3d::prelude::RigidBody::Static,));
+                                collider.insert((avian3d::prelude::RigidBody::Static,));
                             }
 
                             for (texture_name, mesh) in meshes_to_spawn {
@@ -470,8 +471,8 @@ pub fn mesh_spawn_system(
                         original_aabb: aabb,
                     },
                     PbrBundle {
-                        mesh: meshes.add(mesh.to_owned()),
-                        material: material.to_owned(),
+                        mesh: Mesh3d(meshes.add(mesh.to_owned())),
+                        material: MeshMaterial3d(material.to_owned()),
                         // material: materials.add(StandardMaterial {
                         //     base_color: Color::WHITE,
                         //     emissive: Color::hsv(a, 1.0, 1.0).into(),
@@ -491,8 +492,8 @@ pub fn mesh_spawn_system(
                         original_aabb: aabb,
                     },
                     PbrBundle {
-                        mesh: meshes.add(mesh.to_owned()),
-                        material: material.to_owned(),
+                        mesh: Mesh3d(meshes.add(mesh.to_owned())),
+                        material: MeshMaterial3d(material.to_owned()),
                         // material: materials.add(StandardMaterial {
                         //     base_color: Color::WHITE,
                         //     emissive: Color::hsv(a, 1.0, 1.0).into(),
@@ -545,8 +546,8 @@ pub fn post_build_map_system(
                     });
                 }
                 "mover" => {
-                    let mover_entity = commands.entity(entity);
-                    let mover_entity = mover_entity.insert((
+                    let mut mover_entity = commands.entity(entity);
+                    mover_entity.insert((
                         Mover {
                             moving_time: Duration::from_secs_f32(
                                 props.get_property_as_f32("moving_time", 1.0),

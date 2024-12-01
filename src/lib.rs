@@ -2,7 +2,6 @@ use bevy::asset::io::Reader;
 use bevy::asset::{AssetLoader, Handle, LoadContext, ReadAssetBytesError};
 use bevy::prelude::*;
 use bevy::reflect::TypePath;
-use bevy::render::texture::TextureError;
 use components::MapUnits;
 use std::collections::BTreeMap;
 use thiserror::Error;
@@ -54,11 +53,11 @@ impl AssetLoader for MapAssetLoader {
     type Asset = MapAsset;
     type Settings = ();
     type Error = MapAssetLoaderError;
-    async fn load<'a>(
-        &'a self,
-        reader: &'a mut dyn Reader,
-        _settings: &'a Self::Settings,
-        load_context: &'a mut LoadContext<'_>,
+    async fn load(
+        &self,
+        reader: &mut dyn Reader,
+        _settings: &Self::Settings,
+        load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         load::load(reader, load_context, false).await
     }
@@ -75,11 +74,11 @@ impl AssetLoader for HeadlessMapAssetLoader {
     type Asset = MapAsset;
     type Settings = ();
     type Error = MapAssetLoaderError;
-    async fn load<'a>(
-        &'a self,
-        reader: &'a mut dyn Reader,
-        _settings: &'a Self::Settings,
-        load_context: &'a mut LoadContext<'_>,
+    async fn load(
+        &self,
+        reader: &mut dyn Reader,
+        _settings: &Self::Settings,
+        load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         load::load(reader, load_context, true).await
     }

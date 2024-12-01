@@ -4,13 +4,12 @@ use crate::{MapAsset, PostBuildMapEvent};
 use bevy::asset::io::Reader;
 use bevy::asset::LoadContext;
 use bevy::asset::LoadedAsset;
+use bevy::image::{
+    CompressedImageFormats, ImageAddressMode, ImageFilterMode, ImageSampler,
+    ImageSamplerDescriptor, ImageType,
+};
 use bevy::prelude::*;
 use bevy::render::render_asset::RenderAssetUsages;
-use bevy::render::texture::ImageAddressMode;
-use bevy::render::texture::ImageSampler;
-use bevy::render::texture::ImageSamplerDescriptor;
-use bevy::render::texture::ImageType;
-use bevy::render::texture::{CompressedImageFormats, ImageFilterMode};
 use std::collections::BTreeMap;
 
 pub(crate) fn extensions() -> &'static [&'static str] {
