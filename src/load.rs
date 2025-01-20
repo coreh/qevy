@@ -202,7 +202,7 @@ pub(crate) async fn load_map_textures<'a>(
 
             let (perceptual_roughness, metallic, reflectance) =
                 if metallic_roughness_texture.is_some() {
-                    (1.0, 1.0, 0.5)
+                    (1.0, 1.0, 0.25)
                 } else {
                     (0.55, 0.0, 0.0)
                 };
