@@ -27,6 +27,7 @@ pub struct SpawnMeshEvent {
     material: Handle<StandardMaterial>,
     texture_name: String,
     texture_size: (u32, u32),
+    consolidate: bool,
 }
 
 pub fn build_map(
@@ -151,6 +152,7 @@ pub fn build_map(
             .map(|p| (p.key.as_str(), p.value.as_str()))
             .collect::<BTreeMap<_, _>>();
         let classname = props.get(&"classname").unwrap_or(&"").to_string();
+        let consolidate = *props.get(&"breakable_mode").unwrap_or(&"0") == "0";
         let brush_entity = (
             BrushEntity {},
             MapEntityProperties {
@@ -289,6 +291,7 @@ pub fn build_map(
                                             .unwrap()
                                             .clone(),
                                         texture_name: texture_name.to_string(),
+                                        consolidate,
                                     });
                                 }
                             }
@@ -380,6 +383,8 @@ pub fn mesh_spawn_system(
         (Option<Entity>, Entity, Mesh, (u32, u32), String, Aabb),
     > = HashMap::default();
 
+    let mut i: i32 = 0;
+
     // let mut i = 0;
     for ev in spawn_mesh_event.read() {
         // i += 1;
@@ -391,11 +396,21 @@ pub fn mesh_spawn_system(
             .mesh
             .compute_aabb()
             .unwrap_or(Aabb::from_min_max(Vec3::ZERO, Vec3::ZERO));
-        let bucket = (
-            ((transform.translation.x + aabb.center.x) / 50.0).floor() as i32,
-            ((transform.translation.y + aabb.center.y) / 50.0).floor() as i32,
-            ((transform.translation.z + aabb.center.z) / 50.0).floor() as i32,
-        );
+        let bucket = if ev.consolidate {
+            (
+                ((transform.translation.x + aabb.center.x) / 50.0).floor() as i32,
+                ((transform.translation.y + aabb.center.y) / 50.0).floor() as i32,
+                ((transform.translation.z + aabb.center.z) / 50.0).floor() as i32,
+            )
+        } else {
+            // Use special sentinel bucket values (as far as possible from the origin in X and Y axis)
+            // with an increasing counter in the y axis to prevent consolidation. This is a hack,
+            // but collisions will only take place for VERY large maps (far beyond good accuracy range
+            // of f32, so this would be the least of our problems)
+            let bucket = (i32::MAX, i32::MAX, i);
+            i += 1;
+            bucket
+        };
         match consolidated_meshes.entry((ev.brush, ev.material.clone(), bucket)) {
             Entry::Occupied(mut entry) => {
                 let (other_collider, map, mesh, _, _, _) = entry.get_mut();
