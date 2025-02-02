@@ -242,13 +242,23 @@ pub fn build_map(
                     // spawn it's collider
                     #[cfg(feature = "avian")]
                     {
+                        let len = brush_vertices.len() as f32;
+                        let avg = brush_vertices
+                            .iter()
+                            .copied()
+                            .fold(Vec3::ZERO, |a, b| a + b)
+                            / len;
+
+                        let brush_vertices =
+                            brush_vertices.iter().copied().map(|v| v - avg).collect();
+
                         if let Some(convex_hull) =
                             avian3d::prelude::Collider::convex_hull(brush_vertices)
                         {
                             let mut collider = gchildren.spawn((
                                 convex_hull,
-                                TransformBundle::default(),
-                                VisibilityBundle::default(),
+                                Transform::from_translation(avg),
+                                Visibility::default(),
                             ));
                             if classname == "trigger_multiple" {
                                 collider.insert((
@@ -278,7 +288,7 @@ pub fn build_map(
                                     spawn_mesh_event.send(SpawnMeshEvent {
                                         map: map_entity,
                                         brush: brush_entity,
-                                        mesh: mesh,
+                                        mesh: mesh.translated_by(-avg),
                                         collider: Some(collider.id()),
                                         material: map_asset
                                             .material_handles
