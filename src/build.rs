@@ -429,7 +429,7 @@ pub fn mesh_spawn_system(
                     .unwrap_or_else(|| transforms.get(*map).unwrap_or(&Transform::IDENTITY));
 
                 let final_transform = Transform::from_matrix(
-                    transform.compute_matrix().inverse() * other_transform.compute_matrix(),
+                    other_transform.compute_matrix().inverse() * transform.compute_matrix(),
                 );
 
                 mesh.merge(&ev.mesh.clone().transformed_by(final_transform));
