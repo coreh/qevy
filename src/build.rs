@@ -257,6 +257,7 @@ pub fn build_map(
                         {
                             let mut collider = gchildren.spawn((
                                 convex_hull,
+                                Brush,
                                 Transform::from_translation(avg),
                                 Visibility::default(),
                             ));
