@@ -102,7 +102,7 @@ impl MapEntityProperties {
 pub struct BrushEntity;
 
 #[derive(Default, Component)]
-pub struct Brush {
+pub struct BrushFaces {
     pub texture_size: (u32, u32),
     pub texture_name: String,
     pub original_aabb: Aabb,

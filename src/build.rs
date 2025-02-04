@@ -437,7 +437,7 @@ pub fn mesh_spawn_system(
                 if let Some(collider) = ev.collider {
                     commands.entity(collider).with_children(|children| {
                         children.spawn((
-                            Brush {
+                            BrushFaces {
                                 texture_size: ev.texture_size,
                                 texture_name: ev.texture_name.to_owned(),
                                 original_aabb: aabb,
@@ -451,7 +451,7 @@ pub fn mesh_spawn_system(
                 } else {
                     commands.entity(ev.map).with_children(|children| {
                         children.spawn((
-                            Brush {
+                            BrushFaces {
                                 texture_size: ev.texture_size,
                                 texture_name: ev.texture_name.to_owned(),
                                 original_aabb: aabb,
@@ -490,7 +490,7 @@ pub fn mesh_spawn_system(
         if let Some(collider) = collider {
             commands.entity(collider).with_children(|children| {
                 children.spawn((
-                    Brush {
+                    BrushFaces {
                         texture_size: texture_size,
                         texture_name: texture_name.to_owned(),
                         original_aabb: aabb,
@@ -511,7 +511,7 @@ pub fn mesh_spawn_system(
         } else {
             commands.entity(map).with_children(|children| {
                 children.spawn((
-                    Brush {
+                    BrushFaces {
                         texture_size: texture_size,
                         texture_name: texture_name.to_owned(),
                         original_aabb: aabb,
