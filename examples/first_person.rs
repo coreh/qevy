@@ -63,11 +63,8 @@ fn main() {
 
 fn spawn_map(mut commands: Commands, asset_server: Res<AssetServer>) {
     // spawn the map
-    commands.spawn(qevy::components::MapBundle {
-        map: qevy::components::Map {
-            asset: asset_server.load("example.map"), // map must be under `assets` folder
-            ..default()
-        },
+    commands.spawn(qevy::components::Map {
+        asset: asset_server.load("example.map"), // map must be under `assets` folder
         ..default()
     });
 }

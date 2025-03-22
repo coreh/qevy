@@ -163,7 +163,8 @@ pub fn build_map(
                     .collect(),
                 ..default()
             },
-            SpatialBundle::default(),
+            Transform::default(),
+            Visibility::default(),
         );
 
         commands.entity(map_entity).with_children(|children| {
@@ -443,10 +444,8 @@ pub fn mesh_spawn_system(
                                 texture_name: ev.texture_name.to_owned(),
                                 original_aabb: aabb,
                             },
-                            SpatialBundle {
-                                transform: *transform,
-                                ..default()
-                            },
+                            *transform,
+                            Visibility::default(),
                         ));
                     });
                 } else {
@@ -457,10 +456,8 @@ pub fn mesh_spawn_system(
                                 texture_name: ev.texture_name.to_owned(),
                                 original_aabb: aabb,
                             },
-                            SpatialBundle {
-                                transform: *transform,
-                                ..default()
-                            },
+                            *transform,
+                            Visibility::default(),
                         ));
                     });
                 }
@@ -496,16 +493,8 @@ pub fn mesh_spawn_system(
                         texture_name: texture_name.to_owned(),
                         original_aabb: aabb,
                     },
-                    PbrBundle {
-                        mesh: Mesh3d(meshes.add(mesh.to_owned())),
-                        material: MeshMaterial3d(material.to_owned()),
-                        // material: materials.add(StandardMaterial {
-                        //     base_color: Color::WHITE,
-                        //     emissive: Color::hsv(a, 1.0, 1.0).into(),
-                        //     ..default()
-                        // }),
-                        ..default()
-                    },
+                    Mesh3d(meshes.add(mesh.to_owned())),
+                    MeshMaterial3d(material.to_owned()),
                 ));
             });
         // otherwise, it's a child of the map
@@ -517,16 +506,8 @@ pub fn mesh_spawn_system(
                         texture_name: texture_name.to_owned(),
                         original_aabb: aabb,
                     },
-                    PbrBundle {
-                        mesh: Mesh3d(meshes.add(mesh.to_owned())),
-                        material: MeshMaterial3d(material.to_owned()),
-                        // material: materials.add(StandardMaterial {
-                        //     base_color: Color::WHITE,
-                        //     emissive: Color::hsv(a, 1.0, 1.0).into(),
-                        //     ..default()
-                        // }),
-                        ..default()
-                    },
+                    Mesh3d(meshes.add(mesh.to_owned())),
+                    MeshMaterial3d(material.to_owned()),
                 ));
             });
         }
@@ -546,9 +527,9 @@ pub fn post_build_map_system(
         for (entity, props) in map_entities.iter_mut() {
             match props.classname.as_str() {
                 "light" => {
-                    commands.entity(entity).insert(PointLightBundle {
-                        transform: props.transform,
-                        point_light: PointLight {
+                    commands.entity(entity).insert((
+                        props.transform,
+                        PointLight {
                             color: props.get_property_as_color("color", Color::WHITE),
                             radius: props.get_property_as_f32("radius", 0.0),
                             range: props.get_property_as_f32("range", 10.0),
@@ -556,20 +537,18 @@ pub fn post_build_map_system(
                             shadows_enabled: props.get_property_as_bool("shadows_enabled", false),
                             ..default()
                         },
-                        ..default()
-                    });
+                    ));
                 }
                 "directional_light" => {
-                    commands.entity(entity).insert(DirectionalLightBundle {
-                        transform: props.transform,
-                        directional_light: DirectionalLight {
+                    commands.entity(entity).insert((
+                        props.transform,
+                        DirectionalLight {
                             color: props.get_property_as_color("color", Color::WHITE),
                             illuminance: props.get_property_as_f32("illuminance", 10000.0),
                             shadows_enabled: props.get_property_as_bool("shadows_enabled", false),
                             ..default()
                         },
-                        ..default()
-                    });
+                    ));
                 }
                 "mover" => {
                     let mut mover_entity = commands.entity(entity);
@@ -589,10 +568,7 @@ pub fn post_build_map_system(
                             },
                             state: MoverState::default(),
                         },
-                        TransformBundle {
-                            local: Transform::from_xyz(0.0, 0.0, 0.0),
-                            ..default()
-                        },
+                        Transform::from_xyz(0.0, 0.0, 0.0),
                     ));
 
                     if let Some(mover_kind) =
